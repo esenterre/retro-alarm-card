@@ -10,6 +10,14 @@ An elegant, minimalist Lovelace card that faithfully recreates the retro look of
 
 ---
 
+## Motivation
+
+I created this card because I was looking for a clean, straightforward way to manage my alarm clock directly from my Home Assistant dashboards (web & mobile). Existing options either relied on generic drop-down pickers or required separate controls for times and days.
+
+The retro clock radio concept emerged naturally as the most intuitive interface for this: a self-contained card where you click or scroll directly on the digits to adjust time and toggle active days right on the display, making alarm management fast, simple, and functional.
+
+---
+
 ## How It Works & Core Concept
 
 The **Retro Alarm Card** offers a classic digital clock radio interface while leveraging native Home Assistant components:
