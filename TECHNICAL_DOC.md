@@ -1,6 +1,6 @@
 # Retro Alarm Card — Technical Architecture & Developer Guide
 
-> **Document Version:** 2026.9.0  
+> **Document Version:** 2026.9.1  
 > **Author & Project Lead:** Éric Senterre  
 > **Target Audience:** Future AI coding assistants, open-source contributors, and Home Assistant developers maintaining or extending this repository.
 
@@ -14,7 +14,7 @@ Key architectural goals:
 - **Zero External Dependencies:** 100% vector SVG rendering. No external web fonts (like Orbitron or DSEG) to download, eliminating network latency and ensuring 100% offline LAN reliability.
 - **Single-File Distribution:** All component logic, CSS, SVG geometry, multilingual translations, and visual editor live in `retro-alarm-card.js`. This guarantees bulletproof installation via HACS or manual copy without 404 missing asset errors.
 - **Direct-Touch Ergonomics:** Tap left/right digits directly to increment/decrement hours or minutes, or use mouse wheel scrolling on desktop.
-- **Single `input_text` Day Management:** Replaces 7 cumbersome `input_boolean` helper entities with a single text entity storing comma-separated active days (e.g., `"lun, mar, mer, jeu, ven"` or `"mon, tue, wed, thu, fri"`). Full backward compatibility with 7-boolean setups is preserved.
+- **Single `input_text` Day Management:** Replaces 7 cumbersome `input_boolean` helper entities with a single text entity storing comma-separated numeric active days `1..7` (e.g., `"1, 2, 3, 4, 5"` for Mon-Fri). Language-independent storage, no aliases required.
 
 ---
 
@@ -60,8 +60,7 @@ The card is implemented as two native Web Components extending `HTMLElement`:
 | :--- | :--- | :--- | :--- |
 | `entity_time` | `input_datetime.reveil_matin_heure` | `input_datetime` | Stores alarm time in `HH:MM:SS` or `HH:MM`. |
 | `entity_alarm` | `automation.chambre_reveil_matin` | `automation`, `switch`, `input_boolean` | Master alarm switch/automation toggled on/off. |
-| `entity_days` | `input_text.reveil_matin_jours` | `input_text`, `text` | Comma-separated list of active days. |
-| `days` | *(optional legacy)* | Array of `{ entity, label }` | Backward-compatibility fallback for 7 booleans. |
+| `entity_days` | `input_text.reveil_matin_jours` | `input_text`, `text` | Comma-separated list of active day numbers (`1..7`, Monday=1). |
 
 ### 4.2. Time Parsing & 12h/24h Conversion
 
@@ -79,29 +78,22 @@ The card is implemented as two native Web Components extending `HTMLElement`:
     });
     ```
 
-### 4.3. Single `input_text` Day Storage Engine
+### 4.3. Single `input_text` Numeric Day Storage Engine
 
-To eliminate the need for 7 separate `input_boolean` entities, `entity_days` stores active days as a clean string:
-- **String Format:** e.g., `"lun, mar, mer, jeu, ven"` (FR) or `"mon, tue, wed, thu, fri"` (EN).
-- **Flexible Token Parsing:** When evaluating active days, `_isDayActive(dayIndex)` splits `states[entity_days].state` on `[,\s]+` and checks against `DAY_ALIASES[dayIndex]`.
-- **Supported Day Aliases (Indices 0..6):**
-  - Index 0 (Monday): `1`, `mon`, `monday`, `lun`, `lundi`, `mo`, `ma`, `pn`, `pon`, `seg`, `пн`, `mån`, `man`
-  - Index 1 (Tuesday): `2`, `tue`, `tuesday`, `mar`, `mardi`, `di`, `wt`, `ter`, `вт`, `tis`
-  - Index 2 (Wednesday): `3`, `wed`, `wednesday`, `mer`, `mercredi`, `mi`, `wo`, `śr`, `sr`, `qua`, `ср`, `ons`
-  - Index 3 (Thursday): `4`, `thu`, `thursday`, `jeu`, `jeudi`, `do`, `cz`, `czw`, `qui`, `чт`, `tor`
-  - Index 4 (Friday): `5`, `fri`, `friday`, `ven`, `vendredi`, `fr`, `vr`, `pt`, `sex`, `пт`, `fre`
-  - Index 5 (Saturday): `6`, `sat`, `saturday`, `sam`, `samedi`, `sa`, `za`, `sáb`, `sab`, `sb`, `sob`, `сб`, `lör`, `lor`
-  - Index 6 (Sunday): `7`, `sun`, `sunday`, `dim`, `dimanche`, `so`, `zo`, `dom`, `nd`, `nie`, `вс`, `sön`, `son`
+To eliminate the need for 7 separate `input_boolean` entities, `entity_days` stores active days as a clean numeric string, completely independent of the user's display language:
+- **String Format:** Comma-separated ISO 8601 day numbers, `Monday = 1` .. `Sunday = 7`, sorted ascending: e.g., `"1, 2, 3, 4, 5"` for a Mon-Fri schedule.
+- **Numeric Parsing:** When evaluating active days, `_isDayActive(dayIndex)` splits `states[entity_days].state` on `[,\s]+` and checks whether token `String(dayIndex + 1)` is present.
+- **Language-Independent:** Because the storage is purely numeric, no aliases or per-language translation maps are needed. The UI *display* labels (e.g., `LUN`, `MAR`, `MER`) still come from `I18N[lang].days` and are purely cosmetic.
 - **Toggling & Serialization:**
   When day `idx` is tapped:
   1. Gathers all active indices (0..6) with day `idx` toggled.
-  2. Sorts indices ascending (`[0, 1, 2, 4]`).
-  3. Maps indices to 2-3 letter lowercase codes based on current user language (`CODES_MAP[lang]`).
+  2. Sorts indices ascending (e.g., `[0, 1, 2, 4]`).
+  3. Maps indices to numbers (`i + 1`).
   4. Calls `input_text.set_value`:
      ```javascript
      this._hass.callService('input_text', 'set_value', {
        entity_id: this._config.entity_days,
-       value: activeIndices.map(i => codes[i]).join(', ')
+       value: activeIndices.map(i => i + 1).join(', ')
      });
      ```
 - **Jinja2 Automation Template Example (for HA Users):**
@@ -109,9 +101,9 @@ To eliminate the need for 7 separate `input_boolean` entities, `entity_days` sto
   condition:
     - condition: template
       value_template: >-
-        {{ ['lun','mar','mer','jeu','ven','sam','dim'][now().weekday()] in states('input_text.reveil_matin_jours') }}
+        {{ (now().weekday() + 1) | string in states('input_text.reveil_matin_jours') }}
   ```
-  *(Or in English: `{{ now().strftime('%a') | lower in states('input_text.reveil_matin_jours') }}`)*.
+  `now().weekday()` returns `0` for Monday, so adding `1` maps directly onto our `1..7` storage.
 
 ---
 
@@ -196,7 +188,8 @@ function getLang(hass) {
 To add a new language (e.g., Norwegian `no` or Danish `da`):
 1. Open `retro-alarm-card.js`.
 2. In `const I18N = { ... }`, add a new key with `days`, tooltips, editor labels, and helpers.
-3. In `const CODES_MAP = { ... }`, add the corresponding 7 lowercase day abbreviations.
+
+*No storage-code map is required: since `2026.9.1`, day storage is numeric (`1..7`), so translations only affect the on-screen labels.*
 
 ---
 
@@ -225,6 +218,54 @@ Dynamic labels and helper text are dispatched via:
 form.computeLabel = (s) => s.label || s.name;
 form.computeHelper = (s) => s.helper || '';
 ```
+
+### 7.1. Critical Pattern: `_initDom()` + `_updateForm()` (No `innerHTML` Recreation)
+
+> **⚠️ Known Pitfall for HA Card Editors:** Never call `this.shadowRoot.innerHTML = ...` inside `set hass(hass)`. Home Assistant calls `set hass()` on **every state change** across the entire dashboard. Recreating `innerHTML` destroys and re-creates the `<ha-form>` element each time, which:
+> - Kills focus on any active input field
+> - Closes any open dropdown immediately after the user clicks it
+> - Results in the editor appearing unresponsive (click, dropdown opens, dropdown closes instantly)
+
+**Solution implemented in `RetroAlarmCardEditor`:**
+
+```javascript
+constructor() {
+  super();
+  this.attachShadow({ mode: 'open' });
+  this._initDom(); // Write DOM exactly ONCE
+}
+
+_initDom() {
+  this.shadowRoot.innerHTML = `<ha-form></ha-form>`;
+  this._formEl = this.shadowRoot.querySelector('ha-form');
+  this._formEl.computeLabel = (s) => s.label || s.name;
+  this._formEl.computeHelper = (s) => s.helper || '';
+  this._formEl.addEventListener('value-changed', (e) => {
+    this._config = { ...this._config, ...e.detail.value };
+    this.dispatchEvent(new CustomEvent('config-changed',
+      { detail: { config: this._config }, bubbles: true, composed: true }));
+  });
+}
+
+set hass(hass) {
+  this._hass = hass;
+  this._updateForm(); // Only update properties on the EXISTING <ha-form>
+}
+
+setConfig(config) {
+  this._config = config;
+  this._updateForm();
+}
+
+_updateForm() {
+  if (!this._formEl || !this._hass) return;
+  this._formEl.hass   = this._hass;
+  this._formEl.schema = this._buildSchema();
+  this._formEl.data   = { ...this._config };
+}
+```
+
+**Rule of thumb:** The `<ha-form>` element must be created **once** and kept alive. Only its `.hass`, `.schema`, and `.data` properties should be updated on subsequent calls.
 
 ---
 
@@ -272,3 +313,37 @@ To release a clean version (e.g., `2026.9.0`):
 ```
 - `content_in_root: true`: Informs HACS that the distribution `.js` file is located at the repository root.
 - `icon.png`: Placed in the repository root; automatically picked up by HACS as the repository avatar icon.
+
+### 9.3. Automated Versioning with `bump-version.ps1`
+
+The repository includes a PowerShell helper script to automate the full versioning workflow:
+
+```
+bump-version.ps1
+```
+
+**Usage:**
+```powershell
+# Auto-increment patch number (2026.9.0 → 2026.9.1)
+.\bump-version.ps1
+
+# Set an explicit version
+.\bump-version.ps1 -Version 2026.9.2
+
+# Bump + immediately push to GitHub
+.\bump-version.ps1 -Version 2026.9.1 -Push
+```
+
+**What it does:**
+1. Reads `CARD_VERSION` from `retro-alarm-card.js`
+2. Updates the version string in both the JSDoc header comment and the `const CARD_VERSION` line
+3. Runs `git add retro-alarm-card.js` and `git commit -m "chore: bump version to X"`
+4. Creates an annotated Git tag (`git tag -a X -m "Release X"`)
+5. Optionally runs `git push origin main && git push origin X`
+
+**After running (without `-Push`):**
+```powershell
+git push origin main && git push origin 2026.9.1
+```
+Then go to **GitHub › Releases › Draft a new release**, pick the new tag, and click **Publish release** so HACS shows a clean version number.
+

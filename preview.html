@@ -509,7 +509,7 @@
       </div>
       <div class="debug-row">
         <span>input_text.reveil_matin_jours :</span>
-        <span class="debug-val" id="dbgDays">"lun, mar, mer, jeu, ven"</span>
+        <span class="debug-val" id="dbgDays">"1, 2, 3, 4, 5"</span>
       </div>
     </div>
   </div>
@@ -596,7 +596,7 @@
       document.getElementById('dbgTime').innerText = `${realHStr}:${mStr}:00 (${timeFormat})`;
       document.getElementById('dbgAlarm').innerText = alarmActive ? 'on' : 'off';
       const activeDayLabels = daysActive
-        .map((active, idx) => active ? ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'][idx] : null)
+        .map((active, idx) => active ? idx + 1 : null)
         .filter(Boolean);
       document.getElementById('dbgDays').innerText = `"${activeDayLabels.join(', ')}"`;
     }

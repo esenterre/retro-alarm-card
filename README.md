@@ -23,7 +23,7 @@ The retro clock radio concept emerged naturally as the most intuitive interface 
 The **Retro Alarm Card** offers a classic digital clock radio interface while leveraging native Home Assistant components:
 
 - **Time Setting:** Uses an `input_datetime` entity to set and display your alarm time.
-- **Day Selection:** Uses a single `input_text` entity (e.g. `input_text.reveil_matin_jours`) storing active days as a clean comma-separated string (e.g. `lun, mar, mer, jeu, ven` or `mon, tue, wed, thu, fri`). Tapping any day on the card toggles it in the text entity automatically! *(Legacy 7-boolean setups are also backward-compatible).*
+- **Day Selection:** Uses a single `input_text` entity (e.g. `input_text.reveil_matin_jours`) storing active days as comma-separated numbers (`1..7`, Monday=1, e.g. `1, 2, 3, 4, 5`). Tapping any day on the card toggles it in the text entity automatically!
 - **Flexible Automation:** When the alarm triggers, it executes a standard Home Assistant **Automation**. This leaves total freedom on what happens when you wake up (play music, fade in lights, turn on the coffee maker, trigger TTS announcements, etc.).
 
 ---
@@ -72,7 +72,7 @@ The card provides intuitive touch, click, and scroll controls directly on the di
 2. Copy `retro-alarm-card.js` into your Home Assistant `/config/www/` folder.
 3. Go to **Settings** > **Dashboards** > **Three dots menu (top right)** > **Resources**.
 4. Click **Add Resource** and configure:
-   - **Url**: `/local/retro-alarm-card.js?v=2026.9.0`
+   - **Url**: `/local/retro-alarm-card.js?v=2026.9.1`
    - **Resource Type**: `JavaScript Module`
 5. Save and refresh your browser (F5 or clear cache).
 
@@ -99,9 +99,10 @@ To check if today is an active alarm day in your Home Assistant automation, use 
 condition:
   - condition: template
     value_template: >-
-      {{ ['lun','mar','mer','jeu','ven','sam','dim'][now().weekday()] in states('input_text.reveil_matin_jours') }}
+      {{ (now().weekday() + 1) | string in states('input_text.reveil_matin_jours') }}
 ```
-*(Or in English: `{{ now().strftime('%a') | lower in states('input_text.reveil_matin_jours') }}`)*.
+
+`now().weekday()` returns `0` for Monday, so `+1` maps directly onto our `1..7` storage.
 
 ---
 
@@ -111,14 +112,29 @@ condition:
 | --- | --- | --- | --- |
 | `entity_time` | string | `input_datetime.reveil_matin_heure` | Entity storing the alarm time |
 | `entity_alarm` | string | `automation.chambre_reveil_matin` | Alarm entity or automation switch |
-| `entity_days` | string | `input_text.reveil_matin_jours` | Single `input_text` entity storing active days |
+| `entity_days` | string | `input_text.reveil_matin_jours` | Single `input_text` entity storing active day numbers (`1..7`, Monday=1) |
 | `alarm_label` | string | `alarm` | Text displayed next to the sound icon |
 | `color` | string | `#ff9100` | Digit color (amber `#ff9100`, green `#00ff66`, red `#ff3333`, etc.) |
 | `time_format` | string | `24h` | Display format (`24h` or `12h`) |
 | `minute_step` | number | `1` | Minute adjustment step per click (e.g., `1`, `5`) |
 | `slant` | number | `0` | Slant angle in degrees (`0` for straight, `5` for natural right tilt) |
 | `title` | string | `""` | Optional card title |
-| `days` | list | *(optional)* | Legacy fallback list of boolean entities |
+
+---
+
+## What's New in v2026.9.1
+
+1. **Numeric Day Storage (`1..7`)**:
+   - `entity_days` now stores active days as comma-separated numbers, `Monday = 1` ... `Sunday = 7` (e.g. `1, 2, 3, 4, 5`).
+   - Completely language-independent storage: no more day-abbreviation aliases to maintain.
+   - Even simpler automation condition: `{{ (now().weekday() + 1) | string in states('...') }}`.
+
+2. **Legacy 7-Boolean Code Removed**:
+   - Dropped the old `days: [{entity, label}]` backward-compatibility fallback and the default `input_boolean.reveil_*` entities entirely.
+
+3. **Unchanged on screen**: the retro day labels (`MON TUE WED ...`) are still shown in the current UI language — only the stored format changed.
+
+4. **Fixes an encoding bug**: repaired the UTF-8 mojibake that corrupted accented characters and non-Latin text in `retro-alarm-card.js`.
 
 ---
 
@@ -126,8 +142,7 @@ condition:
 
 1. **Single `input_text` Day Management**:
    - Replaces 7 separate `input_boolean` helpers with a single text entity (e.g., `input_text.reveil_matin_jours`).
-   - Stores active days as a clean, human-readable string (e.g. `lun, mar, mer, jeu, ven`).
-   - Tapping any day on the card updates the text entity automatically. Full backward compatibility with 7-boolean setups is maintained.
+   - Tapping any day on the card updates the text entity automatically.
 
 2. **CalVer Versioning (Home Assistant Style)**:
    - Migrated to `YYYY.M.X` format (`2026.9.0`) matching Home Assistant standards.
