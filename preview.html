@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aperçu Réveil Rétro Home Assistant</title>
+  <style>
+    :root {
+      --clock-amber: #ff9100;
+      --clock-amber-glow: rgba(255, 145, 0, 0.55);
+      --clock-amber-dim: rgba(255, 145, 0, 0.08);
+      --clock-red: #ff3b30;
+      --clock-red-glow: rgba(255, 59, 48, 0.6);
+      --clock-red-dim: rgba(255, 59, 48, 0.12);
+      --clock-bg: #0d0f12;
+      --clock-bezel: #1a1c23;
+      --clock-screen-inner: #07080a;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background: #1e1e24;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: center;
+      color: #fff;
+    }
+
+    p.subtitle {
+      font-size: 0.85rem;
+      color: #9aa0a6;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 24px;
+    }
+
+    /* Carte Rétro */
+    .retro-clock-card {
+      background: var(--clock-bezel);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .retro-screen {
+      background: radial-gradient(circle at 50% 30%, #11141a 0%, #050608 100%);
+      border-radius: 14px;
+      padding: 20px 16px 14px;
+      border: 2px solid #232732;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 4px 16px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Reflet de vitre subtil */
+    .retro-screen::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 46%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 65%);
+      pointer-events: none;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      z-index: 5;
+    }
+
+    /* Rangée principale d'affichage de l'heure */
+    .time-display-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      position: relative;
+      padding: 10px 0 16px;
+      z-index: 2;
+    }
+
+    /* Groupes Heures et Minutes */
+    .digit-pair {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Chiffres cliquables et agrandis */
+    .segment-digit {
+      width: 62px;
+      height: 106px;
+      transform: none;
+      display: inline-block;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: transform 0.1s ease, filter 0.15s ease, background 0.2s ease;
+      padding: 2px;
+      box-sizing: border-box;
+    }
+
+    .segment-digit:hover {
+      background: rgba(255, 145, 0, 0.06);
+      filter: brightness(1.2);
+    }
+
+    .segment-digit:active {
+      transform: scale(0.94);
+    }
+
+    .seg {
+      fill: var(--clock-amber-dim);
+      transition: fill 0.1s, filter 0.1s;
+    }
+
+    .seg.on {
+      fill: var(--clock-amber);
+      filter: drop-shadow(0 0 3px var(--clock-amber)) drop-shadow(0 0 11px var(--clock-amber-glow));
+    }
+
+    /* Séparateur deux points - fixe (ne clignote plus) */
+    .colon-separator {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 22px;
+      width: 24px;
+      height: 106px;
+      transform: none;
+    }
+
+    .colon-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      background: var(--clock-amber);
+      box-shadow: 0 0 3px var(--clock-amber), 0 0 10px var(--clock-amber-glow);
+    }
+
+    /* Indicateurs droite (AM / PM) */
+    .right-indicators {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      margin-left: 8px;
+      height: 100px;
+      gap: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 700;
+      font-size: 14px;
+      padding-top: 4px;
+      transition: opacity 0.2s;
+    }
+
+    .right-indicators.hidden {
+      display: none;
+    }
+
+    .ampm-tag {
+      color: var(--clock-amber-dim);
+      text-transform: lowercase;
+      letter-spacing: 1px;
+    }
+
+    .ampm-tag.on {
+      color: var(--clock-amber);
+      text-shadow: 0 0 6px var(--clock-amber);
+    }
+
+    /* Barre inférieure : Jours de semaine + Alarme (espacement aéré et non-rogné) */
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      padding-top: 14px;
+      padding-left: 4px;
+      padding-right: 4px;
+      margin-top: 6px;
+      z-index: 2;
+      position: relative;
+      gap: 6px;
+      box-sizing: border-box;
+    }
+
+    .days-list {
+      display: flex;
+      gap: 3px;
+      flex-wrap: nowrap;
+      align-items: center;
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    .day-item {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: rgba(255, 145, 0, 0.2);
+      cursor: pointer;
+      padding: 3px 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .day-item:hover {
+      color: rgba(255, 145, 0, 0.5);
+      background: rgba(255, 145, 0, 0.05);
+    }
+
+    .day-item.active {
+      color: var(--clock-amber);
+      text-shadow: 0 0 5px var(--clock-amber), 0 0 12px var(--clock-amber-glow);
+    }
+
+    /* Bouton alarme */
+    .alarm-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      color: var(--clock-red-dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .alarm-indicator svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+      transition: fill 0.2s;
+    }
+
+    .alarm-indicator:hover {
+      background: rgba(255, 59, 48, 0.08);
+    }
+
+    .alarm-indicator.active {
+      color: var(--clock-red);
+      text-shadow: 0 0 6px var(--clock-red), 0 0 14px var(--clock-red-glow);
+    }
+
+    .alarm-indicator.active svg {
+      filter: drop-shadow(0 0 4px var(--clock-red));
+    }
+
+    /* Modal / Pop-over d'édition rapide du temps */
+    .time-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .time-modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .time-modal {
+      background: #181a20;
+      border: 1px solid #2e3340;
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 320px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+      text-align: center;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .modal-quick-steppers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .quick-btn {
+      background: #252a36;
+      border: 1px solid #363d4e;
+      color: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-btn:hover {
+      background: rgba(255, 145, 0, 0.2);
+      border-color: var(--clock-amber);
+      color: var(--clock-amber);
+    }
+
+    .modal-native-btn {
+      width: 100%;
+      background: var(--clock-amber);
+      color: #121212;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .modal-close-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #444;
+      color: #aaa;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .debug-box {
+      margin-top: 24px;
+      background: #111317;
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid #232730;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .debug-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .debug-val {
+      font-family: monospace;
+      color: var(--clock-amber);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Aperçu Réveil Rétro Home Assistant</h1>
+    <p class="subtitle">Cliquez sur l'heure, les minutes, les jours ou l'alarme</p>
+
+    <!-- La Carte Rétro -->
+    <div class="retro-clock-card" id="clockCard">
+      <div class="retro-screen">
+        
+        <!-- Affichage 7 Segments -->
+        <div class="time-display-row">
+          
+          <!-- Paire Heures (Gauche: +1h, Droite: -1h) -->
+          <div class="digit-pair" id="hourPair">
+            <!-- Chiffre H1 (+1h) -->
+            <svg class="segment-digit" id="d_h1" viewBox="0 0 50 88" onclick="stepHour(1)" title="Cliquer pour +1 heure">
+              <polygon id="d_h1_a" class="seg" points="9,6 41,6 35,12 15,12" />
+              <polygon id="d_h1_b" class="seg" points="38,14 44,8 44,41 38,36" />
+              <polygon id="d_h1_c" class="seg" points="38,52 44,47 44,80 38,74" />
+              <polygon id="d_h1_d" class="seg" points="15,76 35,76 41,82 9,82" />
+              <polygon id="d_h1_e" class="seg" points="6,47 12,52 12,74 6,80" />
+              <polygon id="d_h1_f" class="seg" points="6,8 12,14 12,36 6,41" />
+              <polygon id="d_h1_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
+            </svg>
+            <!-- Chiffre H2 (-1h) -->
+            <svg class="segment-digit" id="d_h2" viewBox="0 0 50 88" onclick="stepHour(-1)" title="Cliquer pour -1 heure">
+              <polygon id="d_h2_a" class="seg" points="9,6 41,6 35,12 15,12" />
+              <polygon id="d_h2_b" class="seg" points="38,14 44,8 44,41 38,36" />
+              <polygon id="d_h2_c" class="seg" points="38,52 44,47 44,80 38,74" />
+              <polygon id="d_h2_d" class="seg" points="15,76 35,76 41,82 9,82" />
+              <polygon id="d_h2_e" class="seg" points="6,47 12,52 12,74 6,80" />
+              <polygon id="d_h2_f" class="seg" points="6,8 12,14 12,36 6,41" />
+              <polygon id="d_h2_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
+            </svg>
+          </div>
+
+          <!-- Séparateur : (fixe) -->
+          <div class="colon-separator">
+            <div class="colon-dot"></div>
+            <div class="colon-dot"></div>
+          </div>
+
+          <!-- Paire Minutes (Gauche: +1m, Droite: -1m) -->
+          <div class="digit-pair" id="minPair">
+            <!-- Chiffre M1 (+1m ou +5m) -->
+            <svg class="segment-digit" id="d_m1" viewBox="0 0 50 88" onclick="stepMinute(1)" title="Cliquer pour +1 minute">
+              <polygon id="d_m1_a" class="seg" points="9,6 41,6 35,12 15,12" />
+              <polygon id="d_m1_b" class="seg" points="38,14 44,8 44,41 38,36" />
+              <polygon id="d_m1_c" class="seg" points="38,52 44,47 44,80 38,74" />
+              <polygon id="d_m1_d" class="seg" points="15,76 35,76 41,82 9,82" />
+              <polygon id="d_m1_e" class="seg" points="6,47 12,52 12,74 6,80" />
+              <polygon id="d_m1_f" class="seg" points="6,8 12,14 12,36 6,41" />
+              <polygon id="d_m1_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
+            </svg>
+            <!-- Chiffre M2 (-1m ou -5m) -->
+            <svg class="segment-digit" id="d_m2" viewBox="0 0 50 88" onclick="stepMinute(-1)" title="Cliquer pour -1 minute">
+              <polygon id="d_m2_a" class="seg" points="9,6 41,6 35,12 15,12" />
+              <polygon id="d_m2_b" class="seg" points="38,14 44,8 44,41 38,36" />
+              <polygon id="d_m2_c" class="seg" points="38,52 44,47 44,80 38,74" />
+              <polygon id="d_m2_d" class="seg" points="15,76 35,76 41,82 9,82" />
+              <polygon id="d_m2_e" class="seg" points="6,47 12,52 12,74 6,80" />
+              <polygon id="d_m2_f" class="seg" points="6,8 12,14 12,36 6,41" />
+              <polygon id="d_m2_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
+            </svg>
+          </div>
+
+          <!-- Indicateurs AM / PM -->
+          <div class="right-indicators">
+            <span class="ampm-tag" id="tagAm">am</span>
+            <span class="ampm-tag" id="tagPm">pm</span>
+          </div>
+
+        </div>
+
+        <!-- Rangée inférieure : Jours de semaine et Alarme -->
+        <div class="footer-row">
+          <div class="days-list" id="daysContainer">
+            <span class="day-item active" onclick="toggleDay(0)">Lun</span>
+            <span class="day-item active" onclick="toggleDay(1)">Mar</span>
+            <span class="day-item active" onclick="toggleDay(2)">Mer</span>
+            <span class="day-item active" onclick="toggleDay(3)">Jeu</span>
+            <span class="day-item active" onclick="toggleDay(4)">Ven</span>
+            <span class="day-item" onclick="toggleDay(5)">Sam</span>
+            <span class="day-item" onclick="toggleDay(6)">Dim</span>
+          </div>
+
+          <div class="alarm-indicator active" id="alarmToggle" onclick="toggleAlarm()" title="Activer / Désactiver le réveil">
+            <svg viewBox="0 0 24 24">
+              <!-- Onde sonore d'alarme comme dans l'image -->
+              <path d="M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20.07,3.93L18.66,5.34C19.97,7.03 20.78,9.15 20.78,11.45C20.78,13.75 19.97,15.87 18.66,17.56L20.07,18.97C21.75,16.89 22.78,14.28 22.78,11.45C22.78,8.62 21.75,6.01 20.07,3.93M3.93,3.93C2.25,6.01 1.22,8.62 1.22,11.45C1.22,14.28 2.25,16.89 3.93,18.97L5.34,17.56C4.03,15.87 3.22,13.75 3.22,11.45C3.22,9.15 4.03,7.03 5.34,5.34L3.93,3.93Z" />
+            </svg>
+            <span>alarm</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Instructions d'interaction & Contrôles d'aperçu -->
+    <div style="margin-top: 14px; font-size: 0.85rem; color: #8c93a0; text-align: center; line-height: 1.6;">
+      💡 <strong>Heures :</strong> Cliquez sur <code style="color:#ff9100">H gauche (+1h)</code> ou <code style="color:#ff9100">H droite (-1h)</code><br>
+      💡 <strong>Minutes :</strong> Cliquez sur <code style="color:#ff9100">M gauche (+1m)</code> ou <code style="color:#ff9100">M droite (-1m)</code><br>
+      🖱️ <em>Molette de la souris supportée également sur PC !</em>
+      <div style="margin-top: 10px;">
+        <button onclick="toggleFormat()" style="background:#262a36; border:1px solid #3d4356; color:#ff9100; border-radius:6px; padding:6px 12px; cursor:pointer; font-weight:600; font-size:12px;">
+          🔄 Basculer Mode : <span id="btnFmtLabel">24 Heures</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- État simulé Home Assistant -->
+    <div class="debug-box">
+      <strong>Entités Home Assistant correspondantes :</strong>
+      <div class="debug-row" style="margin-top: 8px;">
+        <span>input_datetime.reveil_matin_heure :</span>
+        <span class="debug-val" id="dbgTime">07:15:00</span>
+      </div>
+      <div class="debug-row">
+        <span>automation.chambre_reveil_matin :</span>
+        <span class="debug-val" id="dbgAlarm">on</span>
+      </div>
+      <div class="debug-row">
+        <span>Jours actifs :</span>
+        <span class="debug-val" id="dbgDays">Lun, Mar, Mer, Jeu, Ven</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Segments mapping 0-9
+    const SEGMENTS = {
+      '0': ['a', 'b', 'c', 'd', 'e', 'f'],
+      '1': ['b', 'c'],
+      '2': ['a', 'b', 'g', 'e', 'd'],
+      '3': ['a', 'b', 'g', 'c', 'd'],
+      '4': ['f', 'g', 'b', 'c'],
+      '5': ['a', 'f', 'g', 'c', 'd'],
+      '6': ['a', 'f', 'g', 'e', 'c', 'd'],
+      '7': ['a', 'b', 'c'],
+      '8': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+      '9': ['a', 'b', 'c', 'd', 'f', 'g']
+    };
+
+    // État simulé
+    let currentHour = 19;
+    let currentMinute = 15;
+    let timeFormat = '24h'; // '24h' ou '12h'
+    let alarmActive = true;
+    let daysActive = [true, true, true, true, true, false, false];
+    const dayNames = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
+
+    function toggleFormat() {
+      timeFormat = timeFormat === '24h' ? '12h' : '24h';
+      document.getElementById('btnFmtLabel').innerText = timeFormat === '24h' ? '24 Heures' : '12 Heures (AM/PM)';
+      updateDisplay();
+    }
+
+    function renderDigit(prefix, digit) {
+      const activeSegs = SEGMENTS[digit] || [];
+      ['a', 'b', 'c', 'd', 'e', 'f', 'g'].forEach(seg => {
+        const el = document.getElementById(`${prefix}_${seg}`);
+        if (el) {
+          if (activeSegs.includes(seg)) {
+            el.classList.add('on');
+          } else {
+            el.classList.remove('on');
+          }
+        }
+      });
+    }
+
+    function updateDisplay() {
+      let displayHour = currentHour;
+      let isPm = false;
+
+      const rightIndicators = document.querySelector('.right-indicators');
+      const tagAm = document.getElementById('tagAm');
+      const tagPm = document.getElementById('tagPm');
+
+      if (timeFormat === '12h') {
+        rightIndicators.classList.remove('hidden');
+        isPm = currentHour >= 12;
+        displayHour = currentHour % 12;
+        if (displayHour === 0) displayHour = 12;
+
+        if (isPm) {
+          tagAm.classList.remove('on');
+          tagPm.classList.add('on');
+        } else {
+          tagAm.classList.add('on');
+          tagPm.classList.remove('on');
+        }
+      } else {
+        // En mode 24h, on masque AM/PM pour un affichage parfaitement épuré et centré
+        rightIndicators.classList.add('hidden');
+      }
+
+      const hStr = String(displayHour).padStart(2, '0');
+      const mStr = String(currentMinute).padStart(2, '0');
+
+      renderDigit('d_h1', hStr[0]);
+      renderDigit('d_h2', hStr[1]);
+      renderDigit('d_m1', mStr[0]);
+      renderDigit('d_m2', mStr[1]);
+
+      // Debug box
+      const realHStr = String(currentHour).padStart(2, '0');
+      document.getElementById('dbgTime').innerText = `${realHStr}:${mStr}:00 (${timeFormat})`;
+      document.getElementById('dbgAlarm').innerText = alarmActive ? 'on' : 'off';
+      const activeDayLabels = daysActive
+        .map((active, idx) => active ? dayNames[idx] : null)
+        .filter(Boolean);
+      document.getElementById('dbgDays').innerText = activeDayLabels.join(', ') || 'Aucun';
+    }
+
+    function stepHour(delta) {
+      currentHour = (currentHour + delta + 24) % 24;
+      updateDisplay();
+    }
+
+    function stepMinute(delta) {
+      currentMinute = (currentMinute + delta + 60) % 60;
+      updateDisplay();
+    }
+
+    function toggleDay(idx) {
+      daysActive[idx] = !daysActive[idx];
+      const items = document.querySelectorAll('.day-item');
+      if (items[idx]) {
+        items[idx].classList.toggle('active', daysActive[idx]);
+      }
+      updateDisplay();
+    }
+
+    function toggleAlarm() {
+      alarmActive = !alarmActive;
+      const el = document.getElementById('alarmToggle');
+      el.classList.toggle('active', alarmActive);
+      updateDisplay();
+    }
+
+    // Mousewheel support
+    document.getElementById('hourPair').addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) stepHour(1);
+      else stepHour(-1);
+    }, { passive: false });
+
+    document.getElementById('minPair').addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) stepMinute(1);
+      else stepMinute(-1);
+    }, { passive: false });
+
+    // Initial render
+    updateDisplay();
+  </script>
+</body>
+</html>
