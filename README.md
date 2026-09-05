@@ -7,7 +7,6 @@ An elegant, minimalist Lovelace card that faithfully recreates the retro look of
 ## Preview
 
 ![Retro Alarm Card Preview](images/preview.png)
-*(Screenshots coming soon)*
 
 ---
 
