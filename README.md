@@ -20,31 +20,26 @@ The **Retro Alarm Card** offers a classic digital clock radio interface while le
 
 ---
 
-## Credits & Acknowledgments
+## Interactive Controls
 
-- **Community Inspiration:** The underlying concept of combining `input_datetime` with boolean switches for alarm scheduling stems from various ideas and discussions across the [Home Assistant Community Forums](https://community.home-assistant.io/).
-- **AI-Assisted Development:** The custom Lovelace JavaScript implementation, CSS styling, and retro LED 7-segment design were developed with the assistance of Google's Gemini AI. 
-- **Project Direction:** Designed, directed, tested, and maintained by Éric Senterre.
+The card provides intuitive touch, click, and scroll controls directly on the display:
 
----
+- **Setting the Alarm Time:**
+  - **Hours:**
+    - Click/tap the **Left Hour digit** to **increase** (+1 hour).
+    - Click/tap the **Right Hour digit** to **decrease** (-1 hour).
+  - **Minutes:**
+    - Click/tap the **Left Minute digit** to **increase** by `minute_step`.
+    - Click/tap the **Right Minute digit** to **decrease** by `minute_step`.
+  - **Mouse Wheel (Desktop):** Scroll up or down directly over the hour or minute digits to adjust the time quickly.
 
-## What's New in v1.0.6
+- **Selecting Alarm Days:**
+  - Click/tap on any **day abbreviation** (e.g., `MON`, `TUE`, `WED`) at the bottom of the display to toggle that day ON or OFF.
+  - Active days appear bright, while inactive days are dimmed.
 
-1. **Uppercase Days of the Week**:
-   - `MON  TUE  WED  THU  FRI  SAT  SUN` (and equivalents across 10 languages) for an authentic retro LED/VFD display style.
-   - Optimized spacing to ensure no day name gets clipped.
-
-2. **Natural Slant (`slant`)**:
-   - Inverted slant direction: positive values (e.g., `slant: 5`) now tilt numbers to the **right** (standard natural italic style).
-   - `0` remains the default for vertical digits.
-
-3. **Multilingual Support (10 Official HA Languages)**:
-   - 🇬🇧 EN, 🇩🇪 DE, 🇫🇷 FR, 🇳🇱 NL, 🇪🇸 ES, 🇮🇹 IT, 🇵🇱 PL, 🇵🇹 PT, 🇷🇺 RU, 🇸🇪 SV.
-   - Bundled directly inside the JS file (zero network requests, works fully offline).
-
-4. **HACS & GitHub Ready**:
-   - Includes a fully compliant `hacs.json` file.
-   - Includes an open-source `LICENSE` file (MIT).
+- **Enabling / Disabling the Alarm:**
+  - Click/tap on the **Alarm status indicator** (the speaker icon and `alarm` label).
+  - Toggling this turns the entire alarm automation/switch (`entity_alarm`) ON or OFF.
 
 ---
 
@@ -102,3 +97,30 @@ minute_step: 1
 | `title` | string | `""` | Optional card title |
 | `days` | list | 7 days | Optional custom list of day abbreviations |
 
+---
+
+## What's New in v1.0.6
+
+1. **Uppercase Days of the Week**:
+   - `MON  TUE  WED  THU  FRI  SAT  SUN` (and equivalents across 10 languages) for an authentic retro LED/VFD display style.
+   - Optimized spacing to ensure no day name gets clipped.
+
+2. **Natural Slant (`slant`)**:
+   - Inverted slant direction: positive values (e.g., `slant: 5`) now tilt numbers to the **right** (standard natural italic style).
+   - `0` remains the default for vertical digits.
+
+3. **Multilingual Support (10 Official HA Languages)**:
+   - 🇬🇧 EN, 🇩🇪 DE, 🇫🇷 FR, 🇳🇱 NL, 🇪🇸 ES, 🇮🇹 IT, 🇵🇱 PL, 🇵🇹 PT, 🇷🇺 RU, 🇸🇪 SV.
+   - Bundled directly inside the JS file (zero network requests, works fully offline).
+
+4. **HACS & GitHub Ready**:
+   - Includes a fully compliant `hacs.json` file.
+   - Includes an open-source `LICENSE` file (MIT).
+
+---
+
+## Credits & Acknowledgments
+
+- **Community Inspiration:** The underlying concept of combining `input_datetime` with boolean switches for alarm scheduling stems from various ideas and discussions across the [Home Assistant Community Forums](https://community.home-assistant.io/).
+- **AI-Assisted Development:** The custom Lovelace JavaScript implementation, CSS styling, and retro LED 7-segment design were developed with the assistance of Google's Gemini AI. 
+- **Project Direction:** Designed, directed, tested, and maintained by Éric Senterre.
