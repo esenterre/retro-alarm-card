@@ -70,6 +70,7 @@ The **Retro Alarm Card** offers a classic digital clock radio interface while le
    - **Url**: `/local/retro-alarm-card.js?v=1.0.6`
    - **Resource Type**: `JavaScript Module`
 5. Save and refresh your browser (F5 or clear cache).
+
 ---
 
 ## Example YAML Configuration
@@ -82,10 +83,9 @@ alarm_label: alarm
 color: '#ff9100'
 time_format: '24h'
 minute_step: 1
+```
 
 *(Note: If `days` is omitted, the card automatically falls back to all 7 days in your Home Assistant profile language).*
-
----
 
 ## Configuration Options
 
@@ -101,8 +101,3 @@ minute_step: 1
 | `title` | string | `""` | Optional card title |
 | `days` | list | 7 days | Optional custom list of day abbreviations |
 
----
-
-## Ready for GitHub & HACS!
-
-The repository includes `hacs.json`. You can publish this repo to GitHub and add it as a custom repository in HACS.
