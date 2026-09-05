@@ -23,7 +23,7 @@ The retro clock radio concept emerged naturally as the most intuitive interface 
 The **Retro Alarm Card** offers a classic digital clock radio interface while leveraging native Home Assistant components:
 
 - **Time Setting:** Uses an `input_datetime` entity to set and display your alarm time.
-- **Day Selection:** Uses boolean entities/switches to toggle active alarm days (Monday through Sunday).
+- **Day Selection:** Uses `input_boolean` entities/switches to toggle active alarm days (Monday through Sunday).
 - **Flexible Automation:** When the alarm triggers, it executes a standard Home Assistant **Automation**. This leaves total freedom on what happens when you wake up (play music, fade in lights, turn on the coffee maker, trigger TTS announcements, etc.).
 
 ---
