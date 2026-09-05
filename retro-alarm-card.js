@@ -1,12 +1,14 @@
 /**
- * Retro Alarm Clock Card pour Home Assistant
- * Carte de réveil rétro avec affichage 7 segments LED lumineux ambre.
- * Support multilingue 10 langues (EN, DE, FR, NL, ES, IT, PL, PT, RU, SV).
+ * Retro Alarm Clock Card for Home Assistant
+ * Version: 2026.9.0
+ * 
+ * An authentic 7-segment digital LED/VFD alarm clock card with direct-touch controls,
+ * single input_text day storage, multilingual visual editor, and full HACS compatibility.
  */
 
-const CARD_VERSION = '1.0.6';
+const CARD_VERSION = '2026.9.0';
 console.info(
-  `%c RETRO-ALARM-CARD %c v${CARD_VERSION} (Uppercase Days & Natural Slant) `,
+  `%c RETRO-ALARM-CARD %c v${CARD_VERSION} `,
   'color: #121212; background: #ff9100; font-weight: bold; border-radius: 4px 0 0 4px;',
   'color: #ffffff; background: #252830; font-weight: bold; border-radius: 0 4px 4px 0;'
 );
@@ -25,8 +27,34 @@ const SEGMENTS_MAP = {
 };
 
 /**
- * Dictionnaire complet 10 langues (les plus populaires sur Home Assistant)
- * Les jours de semaine sont en majuscules pour un style VFD / LED authentique.
+ * Aliases reconnus pour chaque jour (0 = Lundi ... 6 = Dimanche)
+ * Permet de reconnaître n'importe quel code de jour dans l'entité input_text.
+ */
+const DAY_ALIASES = [
+  ['1', 'mon', 'monday', 'lun', 'lundi', 'mo', 'ma', 'pn', 'pon', 'seg', 'пн', 'mån', 'man'],
+  ['2', 'tue', 'tuesday', 'mar', 'mardi', 'di', 'wt', 'ter', 'вт', 'tis'],
+  ['3', 'wed', 'wednesday', 'mer', 'mercredi', 'mi', 'wo', 'śr', 'sr', 'qua', 'ср', 'ons'],
+  ['4', 'thu', 'thursday', 'jeu', 'jeudi', 'do', 'cz', 'czw', 'qui', 'чт', 'tor'],
+  ['5', 'fri', 'friday', 'ven', 'vendredi', 'fr', 'vr', 'pt', 'sex', 'пт', 'fre'],
+  ['6', 'sat', 'saturday', 'sam', 'samedi', 'sa', 'za', 'sáb', 'sab', 'sb', 'sob', 'сб', 'lör', 'lor'],
+  ['7', 'sun', 'sunday', 'dim', 'dimanche', 'so', 'zo', 'dom', 'nd', 'nie', 'вс', 'sön', 'son']
+];
+
+const CODES_MAP = {
+  fr: ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'],
+  en: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+  de: ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'],
+  nl: ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'],
+  es: ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'],
+  it: ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'],
+  pl: ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd'],
+  pt: ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'],
+  ru: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'],
+  sv: ['mån', 'tis', 'ons', 'tor', 'fre', 'lör', 'sön']
+};
+
+/**
+ * Dictionnaire multilingue 10 langues (les plus populaires sur Home Assistant)
  */
 const I18N = {
   fr: {
@@ -42,6 +70,8 @@ const I18N = {
     entity_time_helper: "Entité input_datetime contenant l'heure programmée",
     entity_alarm_label: "Automatisation ou commutateur d'alarme",
     entity_alarm_helper: 'Automatisation ou switch déclenchant la sonnerie du réveil',
+    entity_days_label: "Jours d'alarme actifs (input_text)",
+    entity_days_helper: "Entité texte unique contenant les jours actifs (ex: lun, mar, mer, jeu, ven)",
     time_format_label: "Format de l'heure",
     time_format_helper: 'Affichage 24 Heures épuré ou 12 Heures avec témoins AM / PM',
     format_24h: '24 Heures (ex: 19:15 - sans AM/PM)',
@@ -73,6 +103,8 @@ const I18N = {
     entity_time_helper: 'input_datetime entity holding the scheduled alarm time',
     entity_alarm_label: 'Alarm Automation or Switch',
     entity_alarm_helper: 'Automation or switch that triggers the alarm sound',
+    entity_days_label: 'Active Alarm Days Entity (input_text)',
+    entity_days_helper: 'Single text entity storing active days as a comma-separated string (e.g. mon, tue, wed, thu, fri)',
     time_format_label: 'Time Format',
     time_format_helper: 'Clean 24-hour display or 12-hour display with AM/PM tags',
     format_24h: '24 Hours (e.g. 19:15 - without AM/PM)',
@@ -104,6 +136,8 @@ const I18N = {
     entity_time_helper: 'input_datetime-Entität für die eingestellte Weckzeit',
     entity_alarm_label: 'Wecker-Automation oder Schalter',
     entity_alarm_helper: 'Automation oder Schalter, der den Wecker auslöst',
+    entity_days_label: 'Aktive Wecktage (input_text)',
+    entity_days_helper: 'Text-Entität mit aktiven Tagen kommagetrennt (z.B. mo, di, mi, do, fr)',
     time_format_label: 'Zeitformat',
     time_format_helper: 'Kompaktes 24h-Format oder 12h mit AM/PM',
     format_24h: '24 Stunden (z.B. 19:15 - ohne AM/PM)',
@@ -135,6 +169,8 @@ const I18N = {
     entity_time_helper: 'input_datetime-entiteit met de ingestelde wektijd',
     entity_alarm_label: 'Wekkerautomatisering of schakelaar',
     entity_alarm_helper: 'Automatisering of schakelaar die het alarm activeert',
+    entity_days_label: 'Actieve wekdagen (input_text)',
+    entity_days_helper: 'Tekst-entiteit met actieve dagen door komma\'s gescheiden (bijv. ma, di, wo, do, vr)',
     time_format_label: 'Tijdnotatie',
     time_format_helper: 'Strakke 24-uursweergave of 12-uurs met AM/PM',
     format_24h: '24 Uur (bijv. 19:15 - zonder AM/PM)',
@@ -166,6 +202,8 @@ const I18N = {
     entity_time_helper: 'Entidad input_datetime con la hora programada',
     entity_alarm_label: 'Automatización o interruptor de alarma',
     entity_alarm_helper: 'Automatización o interruptor que activa el sonido de la alarma',
+    entity_days_label: 'Días de alarma activos (input_text)',
+    entity_days_helper: 'Entidad de texto con días activos separados por comas (ej: lun, mar, mié, jue, vie)',
     time_format_label: 'Formato de hora',
     time_format_helper: 'Visualización 24h limpia o 12h con AM/PM',
     format_24h: '24 Horas (ej: 19:15 - sin AM/PM)',
@@ -197,6 +235,8 @@ const I18N = {
     entity_time_helper: "Entità input_datetime contenente l'ora programmata",
     entity_alarm_label: 'Automazione o interruttore sveglia',
     entity_alarm_helper: 'Automazione o interruttore che fa suonare la sveglia',
+    entity_days_label: 'Giorni di sveglia attivi (input_text)',
+    entity_days_helper: 'Entità di testo con giorni attivi separati da virgola (es: lun, mar, mer, gio, ven)',
     time_format_label: 'Formato ora',
     time_format_helper: 'Visualizzazione pulita a 24 ore o a 12 ore con AM/PM',
     format_24h: '24 Ore (es: 19:15 - senza AM/PM)',
@@ -228,6 +268,8 @@ const I18N = {
     entity_time_helper: 'Encja input_datetime zawierająca czas budzika',
     entity_alarm_label: 'Automatyzacja lub przełącznik budzika',
     entity_alarm_helper: 'Automatyzacja lub przełącznik uruchamiający budzik',
+    entity_days_label: 'Aktywne dni budzika (input_text)',
+    entity_days_helper: 'Encja tekstowa z aktywnymi dniami oddzielonymi przecinkami (np. pn, wt, śr, cz, pt)',
     time_format_label: 'Format czasu',
     time_format_helper: 'Czysty format 24h lub 12h ze wskaźnikami AM/PM',
     format_24h: '24 Godziny (np. 19:15 - bez AM/PM)',
@@ -259,6 +301,8 @@ const I18N = {
     entity_time_helper: 'Entidade input_datetime com a hora definida',
     entity_alarm_label: 'Automação ou interruptor do alarme',
     entity_alarm_helper: 'Automação ou interruptor que dispara o alarme',
+    entity_days_label: 'Dias de alarme ativos (input_text)',
+    entity_days_helper: 'Entidade de texto com os dias ativos separados por vírgulas (ex: seg, ter, qua, qui, sex)',
     time_format_label: 'Formato da hora',
     time_format_helper: 'Exibição limpa de 24h ou 12h com AM/PM',
     format_24h: '24 Horas (ex: 19:15 - sem AM/PM)',
@@ -290,6 +334,8 @@ const I18N = {
     entity_time_helper: 'Объект input_datetime с установленным временем',
     entity_alarm_label: 'Автоматизация или переключатель будильника',
     entity_alarm_helper: 'Автоматизация или переключатель, запускающий сигнал',
+    entity_days_label: 'Активные дни будильника (input_text)',
+    entity_days_helper: 'Текстовый объект со списком активных дней через запятую (напр. пн, вт, ср, чт, пт)',
     time_format_label: 'Формат времени',
     time_format_helper: 'Чистый 24-часовой формат или 12-часовой с индикаторами AM/PM',
     format_24h: '24 Часа (напр. 19:15 - без AM/PM)',
@@ -321,6 +367,8 @@ const I18N = {
     entity_time_helper: 'input_datetime-entitet med inställd larmtid',
     entity_alarm_label: 'Larmautomatisering eller brytare',
     entity_alarm_helper: 'Automatisering eller brytare som utlöser larmet',
+    entity_days_label: 'Aktiva larmdagar (input_text)',
+    entity_days_helper: 'Textentitet som sparar aktiva dagar separerade med kommatecken (t.ex. mån, tis, ons, tor, fre)',
     time_format_label: 'Tidsformat',
     time_format_helper: 'Städad 24h-visning eller 12h med AM/PM-taggar',
     format_24h: '24 Timmar (t.ex. 19:15 - utan AM/PM)',
@@ -384,6 +432,7 @@ class RetroAlarmCard extends HTMLElement {
     return {
       entity_time: 'input_datetime.reveil_matin_heure',
       entity_alarm: 'automation.chambre_reveil_matin',
+      entity_days: 'input_text.reveil_matin_jours',
       alarm_label: 'alarm',
       time_format: '24h',
       color: '#ff9100',
@@ -405,6 +454,7 @@ class RetroAlarmCard extends HTMLElement {
       title: config.title || '',
       entity_time: config.entity_time || 'input_datetime.reveil_matin_heure',
       entity_alarm: config.entity_alarm || 'automation.chambre_reveil_matin',
+      entity_days: config.entity_days !== undefined ? config.entity_days : 'input_text.reveil_matin_jours',
       alarm_label: config.alarm_label || 'alarm',
       time_format: config.time_format || '24h',
       color: config.color || '#ff9100',
@@ -455,7 +505,7 @@ class RetroAlarmCard extends HTMLElement {
     const mDownTip = getTranslation(this._hass, 'm_down_tip', mStep);
     const alarmTip = getTranslation(this._hass, 'alarm_tip');
 
-    // Inversion du slant : une valeur positive (ex: 5) fait pencher vers la droite (italique naturel)
+    // Inversion du slant : une valeur positive (ex: 5) fait pencher vers la droite (italique standard)
     const slantDeg = this._config.slant ? -Number(this._config.slant) : 0;
     const slantTransform = slantDeg ? `skewX(${slantDeg}deg)` : 'none';
 
@@ -507,7 +557,7 @@ class RetroAlarmCard extends HTMLElement {
           box-sizing: border-box;
         }
 
-        /* Effet de reflet de vitre */
+        /* Effet de reflet de vitre subtil */
         .retro-screen::before {
           content: "";
           position: absolute;
@@ -620,7 +670,7 @@ class RetroAlarmCard extends HTMLElement {
           text-shadow: 0 0 6px var(--clock-color);
         }
 
-        /* Rangée inférieure : Jours de semaine en Majuscules + Alarme */
+        /* Rangée inférieure : Jours de semaine en Majuscules + Alarme (jamais coupée) */
         .footer-row {
           display: flex;
           align-items: center;
@@ -889,6 +939,75 @@ class RetroAlarmCard extends HTMLElement {
     });
   }
 
+  /**
+   * Vérifie si un jour (0 = Lundi ... 6 = Dimanche) est actif
+   */
+  _isDayActive(dayIndex) {
+    // Mode rétro-compatible 1 : liste explicite d'entités 'days'
+    if (this._config.days && Array.isArray(this._config.days) && this._config.days[dayIndex]) {
+      const entityId = this._config.days[dayIndex].entity;
+      return this._hass?.states[entityId]?.state === 'on';
+    }
+
+    // Mode moderne 2 : entité unique input_text
+    if (this._config.entity_days && this._hass?.states[this._config.entity_days]) {
+      const raw = (this._hass.states[this._config.entity_days].state || '').toLowerCase();
+      const tokens = raw.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+      const aliases = DAY_ALIASES[dayIndex] || [];
+      return tokens.some(tok => aliases.includes(tok));
+    }
+
+    // Mode rétro-compatible 3 : 7 entités booléennes par défaut
+    const defaultEntity = DEFAULT_ENTITIES_DAYS[dayIndex];
+    if (defaultEntity && this._hass?.states[defaultEntity]) {
+      return this._hass.states[defaultEntity].state === 'on';
+    }
+
+    return false;
+  }
+
+  /**
+   * Bascule l'état d'un jour (0..6)
+   */
+  _toggleDay(dayIndex) {
+    if (!this._hass) return;
+
+    // Si l'usager a défini explicitement 'days' avec des entités booléennes
+    if (this._config.days && Array.isArray(this._config.days) && this._config.days[dayIndex]) {
+      this._toggleEntity(this._config.days[dayIndex].entity);
+      return;
+    }
+
+    // Si une entité unique input_text est configurée (mode moderne)
+    if (this._config.entity_days) {
+      const activeIndices = [];
+      for (let i = 0; i < 7; i++) {
+        const isActive = this._isDayActive(i);
+        if (i === dayIndex) {
+          if (!isActive) activeIndices.push(i);
+        } else {
+          if (isActive) activeIndices.push(i);
+        }
+      }
+      activeIndices.sort((a, b) => a - b);
+
+      const lang = getLang(this._hass);
+      const codes = CODES_MAP[lang] || CODES_MAP.en;
+      const newString = activeIndices.map(i => codes[i]).join(', ');
+
+      this._hass.callService('input_text', 'set_value', {
+        entity_id: this._config.entity_days,
+        value: newString
+      });
+      return;
+    }
+
+    // Fallback booléen par défaut
+    if (DEFAULT_ENTITIES_DAYS[dayIndex]) {
+      this._toggleEntity(DEFAULT_ENTITIES_DAYS[dayIndex]);
+    }
+  }
+
   _updateDays() {
     const daysContainer = this.shadowRoot.getElementById('daysList');
     if (!daysContainer) return;
@@ -896,30 +1015,24 @@ class RetroAlarmCard extends HTMLElement {
     daysContainer.innerHTML = '';
     const dayLabels = getTranslation(this._hass, 'days');
 
-    let daysToRender = [];
-    if (this._config.days && Array.isArray(this._config.days) && this._config.days.length > 0) {
-      daysToRender = this._config.days;
-    } else {
-      daysToRender = DEFAULT_ENTITIES_DAYS.map((entity, idx) => ({
-        entity,
-        label: dayLabels[idx] || `J${idx + 1}`
-      }));
-    }
+    for (let idx = 0; idx < 7; idx++) {
+      let label = dayLabels[idx] || `J${idx + 1}`;
+      if (this._config.days && Array.isArray(this._config.days) && this._config.days[idx]?.label) {
+        label = this._config.days[idx].label;
+      }
 
-    daysToRender.forEach((dayCfg) => {
-      const stateObj = this._hass.states[dayCfg.entity];
-      const isActive = stateObj ? stateObj.state === 'on' : false;
+      const isActive = this._isDayActive(idx);
 
       const span = document.createElement('span');
       span.className = `day-item ${isActive ? 'active' : ''}`;
-      span.textContent = (dayCfg.label || dayCfg.entity.split('.').pop()).toUpperCase();
-      span.title = `${dayCfg.label} : ${isActive ? 'ON' : 'OFF'}`;
+      span.textContent = String(label).toUpperCase();
+      span.title = `${label} : ${isActive ? 'ON' : 'OFF'}`;
       span.addEventListener('click', () => {
-        this._toggleEntity(dayCfg.entity);
+        this._toggleDay(idx);
       });
 
       daysContainer.appendChild(span);
-    });
+    }
   }
 
   _toggleEntity(entityId) {
@@ -995,6 +1108,12 @@ class RetroAlarmCardEditor extends HTMLElement {
         selector: { entity: { domain: ['automation', 'switch', 'input_boolean'] } }
       },
       {
+        name: 'entity_days',
+        label: t('entity_days_label'),
+        helper: t('entity_days_helper'),
+        selector: { entity: { domain: ['input_text', 'text'] } }
+      },
+      {
         name: 'time_format',
         label: t('time_format_label'),
         helper: t('time_format_helper'),
@@ -1061,6 +1180,7 @@ class RetroAlarmCardEditor extends HTMLElement {
       title: this._config.title || '',
       entity_time: this._config.entity_time || 'input_datetime.reveil_matin_heure',
       entity_alarm: this._config.entity_alarm || 'automation.chambre_reveil_matin',
+      entity_days: this._config.entity_days !== undefined ? this._config.entity_days : 'input_text.reveil_matin_jours',
       time_format: this._config.time_format || '24h',
       color: this._config.color || '#ff9100',
       minute_step: this._config.minute_step || 1,
@@ -1124,6 +1244,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'retro-alarm-card',
   name: 'Retro Alarm Card',
-  description: 'Carte réveil rétro style 7-segments ambre avec éditeur visuel multilingue (10 langues)',
+  description: 'Retro 7-segment digital LED/VFD alarm clock card with visual editor (10 languages)',
   preview: true
 });

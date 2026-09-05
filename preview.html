@@ -508,8 +508,8 @@
         <span class="debug-val" id="dbgAlarm">on</span>
       </div>
       <div class="debug-row">
-        <span>Jours actifs :</span>
-        <span class="debug-val" id="dbgDays">Lun, Mar, Mer, Jeu, Ven</span>
+        <span>input_text.reveil_matin_jours :</span>
+        <span class="debug-val" id="dbgDays">"lun, mar, mer, jeu, ven"</span>
       </div>
     </div>
   </div>
@@ -596,9 +596,9 @@
       document.getElementById('dbgTime').innerText = `${realHStr}:${mStr}:00 (${timeFormat})`;
       document.getElementById('dbgAlarm').innerText = alarmActive ? 'on' : 'off';
       const activeDayLabels = daysActive
-        .map((active, idx) => active ? dayNames[idx] : null)
+        .map((active, idx) => active ? ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'][idx] : null)
         .filter(Boolean);
-      document.getElementById('dbgDays').innerText = activeDayLabels.join(', ') || 'Aucun';
+      document.getElementById('dbgDays').innerText = `"${activeDayLabels.join(', ')}"`;
     }
 
     function stepHour(delta) {
