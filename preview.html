@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aperçu Réveil Rétro Home Assistant</title>
+  <title>Retro Alarm Card — Preview</title>
   <style>
     :root {
       --clock-amber: #ff9100;
@@ -87,7 +87,7 @@
       z-index: 5;
     }
 
-    /* Rangée principale d'affichage de l'heure */
+    /* Main time display row */
     .time-display-row {
       display: flex;
       align-items: center;
@@ -98,14 +98,14 @@
       z-index: 2;
     }
 
-    /* Groupes Heures et Minutes */
+    /* Hours and Minutes groups */
     .digit-pair {
       display: flex;
       align-items: center;
       gap: 4px;
     }
 
-    /* Chiffres cliquables et agrandis */
+    /* Clickable enlarged digits */
     .segment-digit {
       width: 62px;
       height: 106px;
@@ -137,7 +137,7 @@
       filter: drop-shadow(0 0 3px var(--clock-amber)) drop-shadow(0 0 11px var(--clock-amber-glow));
     }
 
-    /* Séparateur deux points - fixe (ne clignote plus) */
+    /* Colon separator - fixed (no longer blinks) */
     .colon-separator {
       display: flex;
       flex-direction: column;
@@ -157,7 +157,7 @@
       box-shadow: 0 0 3px var(--clock-amber), 0 0 10px var(--clock-amber-glow);
     }
 
-    /* Indicateurs droite (AM / PM) */
+    /* Right indicators (AM / PM) */
     .right-indicators {
       display: flex;
       flex-direction: column;
@@ -187,7 +187,7 @@
       text-shadow: 0 0 6px var(--clock-amber);
     }
 
-    /* Barre inférieure : Jours de semaine + Alarme (espacement aéré et non-rogné) */
+    /* Bottom bar: weekdays + alarm (spacious unclipped layout) */
     .footer-row {
       display: flex;
       align-items: center;
@@ -388,7 +388,7 @@
 <body>
 
   <div class="container">
-    <h1>Aperçu Réveil Rétro Home Assistant</h1>
+    <h1>Retro Alarm Card — Preview</h1>
     <p class="subtitle">Cliquez sur l'heure, les minutes, les jours ou l'alarme</p>
 
     <!-- La Carte Rétro -->
@@ -398,10 +398,10 @@
         <!-- Affichage 7 Segments -->
         <div class="time-display-row">
           
-          <!-- Paire Heures (Gauche: +1h, Droite: -1h) -->
+          <!-- Hours pair (left: +1h, right: -1h) -->
           <div class="digit-pair" id="hourPair">
-            <!-- Chiffre H1 (+1h) -->
-            <svg class="segment-digit" id="d_h1" viewBox="0 0 50 88" onclick="stepHour(1)" title="Cliquer pour +1 heure">
+            <!-- Digit H1 (+1h) -->
+            <svg class="segment-digit" id="d_h1" viewBox="0 0 50 88" onclick="stepHour(1)" title="Click for +1 hour">
               <polygon id="d_h1_a" class="seg" points="9,6 41,6 35,12 15,12" />
               <polygon id="d_h1_b" class="seg" points="38,14 44,8 44,41 38,36" />
               <polygon id="d_h1_c" class="seg" points="38,52 44,47 44,80 38,74" />
@@ -410,8 +410,8 @@
               <polygon id="d_h1_f" class="seg" points="6,8 12,14 12,36 6,41" />
               <polygon id="d_h1_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
             </svg>
-            <!-- Chiffre H2 (-1h) -->
-            <svg class="segment-digit" id="d_h2" viewBox="0 0 50 88" onclick="stepHour(-1)" title="Cliquer pour -1 heure">
+            <!-- Digit H2 (-1h) -->
+            <svg class="segment-digit" id="d_h2" viewBox="0 0 50 88" onclick="stepHour(-1)" title="Click for -1 hour">
               <polygon id="d_h2_a" class="seg" points="9,6 41,6 35,12 15,12" />
               <polygon id="d_h2_b" class="seg" points="38,14 44,8 44,41 38,36" />
               <polygon id="d_h2_c" class="seg" points="38,52 44,47 44,80 38,74" />
@@ -422,16 +422,16 @@
             </svg>
           </div>
 
-          <!-- Séparateur : (fixe) -->
+          <!-- Separator : (fixed) -->
           <div class="colon-separator">
             <div class="colon-dot"></div>
             <div class="colon-dot"></div>
           </div>
 
-          <!-- Paire Minutes (Gauche: +1m, Droite: -1m) -->
+          <!-- Minutes pair (left: +1m, right: -1m) -->
           <div class="digit-pair" id="minPair">
-            <!-- Chiffre M1 (+1m ou +5m) -->
-            <svg class="segment-digit" id="d_m1" viewBox="0 0 50 88" onclick="stepMinute(1)" title="Cliquer pour +1 minute">
+            <!-- Digit M1 (+1m or +5m) -->
+            <svg class="segment-digit" id="d_m1" viewBox="0 0 50 88" onclick="stepMinute(1)" title="Click for +1 minute">
               <polygon id="d_m1_a" class="seg" points="9,6 41,6 35,12 15,12" />
               <polygon id="d_m1_b" class="seg" points="38,14 44,8 44,41 38,36" />
               <polygon id="d_m1_c" class="seg" points="38,52 44,47 44,80 38,74" />
@@ -440,8 +440,8 @@
               <polygon id="d_m1_f" class="seg" points="6,8 12,14 12,36 6,41" />
               <polygon id="d_m1_g" class="seg" points="10,44 14,41 36,41 40,44 36,47 14,47" />
             </svg>
-            <!-- Chiffre M2 (-1m ou -5m) -->
-            <svg class="segment-digit" id="d_m2" viewBox="0 0 50 88" onclick="stepMinute(-1)" title="Cliquer pour -1 minute">
+            <!-- Digit M2 (-1m or -5m) -->
+            <svg class="segment-digit" id="d_m2" viewBox="0 0 50 88" onclick="stepMinute(-1)" title="Click for -1 minute">
               <polygon id="d_m2_a" class="seg" points="9,6 41,6 35,12 15,12" />
               <polygon id="d_m2_b" class="seg" points="38,14 44,8 44,41 38,36" />
               <polygon id="d_m2_c" class="seg" points="38,52 44,47 44,80 38,74" />
@@ -452,7 +452,7 @@
             </svg>
           </div>
 
-          <!-- Indicateurs AM / PM -->
+          <!-- AM / PM indicators -->
           <div class="right-indicators">
             <span class="ampm-tag" id="tagAm">am</span>
             <span class="ampm-tag" id="tagPm">pm</span>
@@ -460,19 +460,19 @@
 
         </div>
 
-        <!-- Rangée inférieure : Jours de semaine et Alarme -->
+        <!-- Bottom row: weekdays and alarm -->
         <div class="footer-row">
           <div class="days-list" id="daysContainer">
-            <span class="day-item active" onclick="toggleDay(0)">Lun</span>
-            <span class="day-item active" onclick="toggleDay(1)">Mar</span>
-            <span class="day-item active" onclick="toggleDay(2)">Mer</span>
-            <span class="day-item active" onclick="toggleDay(3)">Jeu</span>
-            <span class="day-item active" onclick="toggleDay(4)">Ven</span>
-            <span class="day-item" onclick="toggleDay(5)">Sam</span>
-            <span class="day-item" onclick="toggleDay(6)">Dim</span>
+            <span class="day-item active" onclick="toggleDay(0)">Mon</span>
+            <span class="day-item active" onclick="toggleDay(1)">Tue</span>
+            <span class="day-item active" onclick="toggleDay(2)">Wed</span>
+            <span class="day-item active" onclick="toggleDay(3)">Thu</span>
+            <span class="day-item active" onclick="toggleDay(4)">Fri</span>
+            <span class="day-item" onclick="toggleDay(5)">Sat</span>
+            <span class="day-item" onclick="toggleDay(6)">Sun</span>
           </div>
 
-          <div class="alarm-indicator active" id="alarmToggle" onclick="toggleAlarm()" title="Activer / Désactiver le réveil">
+          <div class="alarm-indicator active" id="alarmToggle" onclick="toggleAlarm()" title="Enable / Disable the alarm">
             <svg viewBox="0 0 24 24">
               <!-- Onde sonore d'alarme comme dans l'image -->
               <path d="M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20.07,3.93L18.66,5.34C19.97,7.03 20.78,9.15 20.78,11.45C20.78,13.75 19.97,15.87 18.66,17.56L20.07,18.97C21.75,16.89 22.78,14.28 22.78,11.45C22.78,8.62 21.75,6.01 20.07,3.93M3.93,3.93C2.25,6.01 1.22,8.62 1.22,11.45C1.22,14.28 2.25,16.89 3.93,18.97L5.34,17.56C4.03,15.87 3.22,13.75 3.22,11.45C3.22,9.15 4.03,7.03 5.34,5.34L3.93,3.93Z" />
@@ -484,31 +484,31 @@
       </div>
     </div>
 
-    <!-- Instructions d'interaction & Contrôles d'aperçu -->
+    <!-- Interaction instructions & preview controls -->
     <div style="margin-top: 14px; font-size: 0.85rem; color: #8c93a0; text-align: center; line-height: 1.6;">
-      💡 <strong>Heures :</strong> Cliquez sur <code style="color:#ff9100">H gauche (+1h)</code> ou <code style="color:#ff9100">H droite (-1h)</code><br>
-      💡 <strong>Minutes :</strong> Cliquez sur <code style="color:#ff9100">M gauche (+1m)</code> ou <code style="color:#ff9100">M droite (-1m)</code><br>
-      🖱️ <em>Molette de la souris supportée également sur PC !</em>
+      💡 <strong>Hours :</strong> Click <code style="color:#ff9100">left H (+1h)</code> or <code style="color:#ff9100">right H (-1h)</code><br>
+      💡 <strong>Minutes :</strong> Click <code style="color:#ff9100">left M (+1m)</code> or <code style="color:#ff9100">right M (-1m)</code><br>
+      🖱️ <em>Mouse wheel is also supported on desktop!</em>
       <div style="margin-top: 10px;">
         <button onclick="toggleFormat()" style="background:#262a36; border:1px solid #3d4356; color:#ff9100; border-radius:6px; padding:6px 12px; cursor:pointer; font-weight:600; font-size:12px;">
-          🔄 Basculer Mode : <span id="btnFmtLabel">24 Heures</span>
+          🔄 Toggle Mode : <span id="btnFmtLabel">24 Hours</span>
         </button>
       </div>
     </div>
 
-    <!-- État simulé Home Assistant -->
+    <!-- Simulated Home Assistant state -->
     <div class="debug-box">
-      <strong>Entités Home Assistant correspondantes :</strong>
+      <strong>Home Assistant entities mirrored:</strong>
       <div class="debug-row" style="margin-top: 8px;">
-        <span>input_datetime.reveil_matin_heure :</span>
+        <span>input_datetime.alarm_time :</span>
         <span class="debug-val" id="dbgTime">07:15:00</span>
       </div>
       <div class="debug-row">
-        <span>automation.chambre_reveil_matin :</span>
+        <span>automation.bedroom_wake_up :</span>
         <span class="debug-val" id="dbgAlarm">on</span>
       </div>
       <div class="debug-row">
-        <span>input_text.reveil_matin_jours :</span>
+        <span>input_text.alarm_days :</span>
         <span class="debug-val" id="dbgDays">"1, 2, 3, 4, 5"</span>
       </div>
     </div>
@@ -529,17 +529,17 @@
       '9': ['a', 'b', 'c', 'd', 'f', 'g']
     };
 
-    // État simulé
+    // Simulated state
     let currentHour = 19;
     let currentMinute = 15;
-    let timeFormat = '24h'; // '24h' ou '12h'
+    let timeFormat = '24h'; // '24h' or '12h'
     let alarmActive = true;
     let daysActive = [true, true, true, true, true, false, false];
-    const dayNames = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
+    const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
     function toggleFormat() {
       timeFormat = timeFormat === '24h' ? '12h' : '24h';
-      document.getElementById('btnFmtLabel').innerText = timeFormat === '24h' ? '24 Heures' : '12 Heures (AM/PM)';
+      document.getElementById('btnFmtLabel').innerText = timeFormat === '24h' ? '24 Hours' : '12 Hours (AM/PM)';
       updateDisplay();
     }
 
@@ -579,7 +579,7 @@
           tagPm.classList.remove('on');
         }
       } else {
-        // En mode 24h, on masque AM/PM pour un affichage parfaitement épuré et centré
+        // In 24h mode, hide AM/PM for a perfectly clean and centered display
         rightIndicators.classList.add('hidden');
       }
 

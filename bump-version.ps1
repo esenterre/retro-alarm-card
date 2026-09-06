@@ -21,7 +21,7 @@
 .EXAMPLE
     .\bump-version.ps1                        # auto-increment patch
     .\bump-version.ps1 -Version 2026.9.2     # specific version
-    .\bump-version.ps1 -Version 2026.9.1 -Push  # bump + push
+    .\bump-version.ps1 -Version 2026.9.2 -Push  # bump + push
 #>
 
 param(

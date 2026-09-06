@@ -1,12 +1,12 @@
 /**
  * Retro Alarm Clock Card for Home Assistant
- * Version: 2026.9.1
+ * Version: 2026.9.2
  * 
  * An authentic 7-segment digital LED/VFD alarm clock card with direct-touch controls,
  * numeric (1..7) input_text day storage, multilingual visual editor, and full HACS compatibility.
  */
 
-const CARD_VERSION = '2026.9.1';
+const CARD_VERSION = '2026.9.2';
 console.info(
   `%c RETRO-ALARM-CARD %c v${CARD_VERSION} `,
   'color: #121212; background: #ff9100; font-weight: bold; border-radius: 4px 0 0 4px;',
@@ -393,9 +393,9 @@ class RetroAlarmCard extends HTMLElement {
 
   static getStubConfig() {
     return {
-      entity_time: 'input_datetime.reveil_matin_heure',
-      entity_alarm: 'automation.chambre_reveil_matin',
-      entity_days: 'input_text.reveil_matin_jours',
+      entity_time: 'input_datetime.alarm_time',
+      entity_alarm: 'automation.bedroom_wake_up',
+      entity_days: 'input_text.alarm_days',
       alarm_label: 'alarm',
       time_format: '24h',
       color: '#ff9100',
@@ -415,9 +415,9 @@ class RetroAlarmCard extends HTMLElement {
   setConfig(config) {
     this._config = {
       title: config.title || '',
-      entity_time: config.entity_time || 'input_datetime.reveil_matin_heure',
-      entity_alarm: config.entity_alarm || 'automation.chambre_reveil_matin',
-      entity_days: config.entity_days !== undefined ? config.entity_days : 'input_text.reveil_matin_jours',
+      entity_time: config.entity_time || 'input_datetime.alarm_time',
+      entity_alarm: config.entity_alarm || 'automation.bedroom_wake_up',
+      entity_days: config.entity_days !== undefined ? config.entity_days : 'input_text.alarm_days',
       alarm_label: config.alarm_label || 'alarm',
       time_format: config.time_format || '24h',
       color: config.color || '#ff9100',
@@ -467,7 +467,7 @@ class RetroAlarmCard extends HTMLElement {
     const mDownTip = getTranslation(this._hass, 'm_down_tip', mStep);
     const alarmTip = getTranslation(this._hass, 'alarm_tip');
 
-    // Inversion du slant : une valeur positive (ex: 5) fait pencher vers la droite (italique standard)
+    // Slant inversion: a positive value (e.g. 5) tilts digits to the right (standard italic)
     const slantDeg = this._config.slant ? -Number(this._config.slant) : 0;
     const slantTransform = slantDeg ? `skewX(${slantDeg}deg)` : 'none';
 
@@ -1128,9 +1128,9 @@ class RetroAlarmCardEditor extends HTMLElement {
 
     const data = {
       title: this._config.title || '',
-      entity_time: this._config.entity_time || 'input_datetime.reveil_matin_heure',
-      entity_alarm: this._config.entity_alarm || 'automation.chambre_reveil_matin',
-      entity_days: this._config.entity_days !== undefined ? this._config.entity_days : 'input_text.reveil_matin_jours',
+      entity_time: this._config.entity_time || 'input_datetime.alarm_time',
+      entity_alarm: this._config.entity_alarm || 'automation.bedroom_wake_up',
+      entity_days: this._config.entity_days !== undefined ? this._config.entity_days : 'input_text.alarm_days',
       time_format: this._config.time_format || '24h',
       color: this._config.color || '#ff9100',
       minute_step: this._config.minute_step || 1,
