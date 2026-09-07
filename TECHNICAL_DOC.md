@@ -316,7 +316,7 @@ To release a clean version (e.g., `2026.9.0`):
 
 ### 9.3. Automated Versioning with `bump-version.ps1`
 
-The repository includes a PowerShell helper script to automate the full versioning workflow:
+A local PowerShell helper script automates the full versioning workflow for the maintainer. It is **not part of the Git repository** (`bump-version.ps1` is listed in `.gitignore` and only exists locally, in the repository root):
 
 ```
 bump-version.ps1
